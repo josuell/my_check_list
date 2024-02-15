@@ -19,6 +19,8 @@ class _HomePageState extends State<HomePage> {
   late DateFormat _formatter;
   String sortTypeInitial = 'alphabetic';
   SortType sortType = SortType.asc;
+  String? searchWord ;
+  TextEditingController searchWordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +79,9 @@ class _HomePageState extends State<HomePage> {
                       .sortTaskByDesignation(allCheckList, sortType)
                   : MyToDoListService()
                       .sortTaskByDate(allCheckList, sortType);
+          if(searchWord!=null && searchWord!.isNotEmpty){
+            sortedCheckList = sortedCheckList.where((element) => element.designation.contains(searchWord!)).toList();
+          }
           return (sortedCheckList.isNotEmpty)
               ? SingleChildScrollView(
                   child: Column(
@@ -85,7 +90,16 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
                           children: [
-                            Expanded(child: TextFormField()),
+                            Expanded(
+                                child: TextFormField(
+                                  controller: searchWordController,
+                              onChanged: (value){
+                                searchWord = searchWordController.text;
+                                setState(() {
+
+                                });
+                              },
+                            )),
                             PopupMenuButton(
                               icon: const Icon(Icons.swap_vert),
                               itemBuilder: (BuildContext context) {

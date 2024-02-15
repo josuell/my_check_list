@@ -19,7 +19,8 @@ class _HomePageState extends State<HomePage> {
   late DateFormat _formatter;
   String sortTypeInitial = 'alphabetic';
   SortType sortType = SortType.asc;
-  String? searchWord ;
+  String? searchWord;
+
   TextEditingController searchWordController = TextEditingController();
 
   @override
@@ -36,7 +37,7 @@ class _HomePageState extends State<HomePage> {
               content: Text(state.message),
             ),
           );
-          context.read<CheckListBloc>().add(ShowingTheCheckListEvent());
+          context.read<CheckListBloc>().add(ShowingTheCheckListEvent(this.context));
         }
         if (state is AddCheckSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -44,7 +45,7 @@ class _HomePageState extends State<HomePage> {
               content: Text(state.message),
             ),
           );
-          context.read<CheckListBloc>().add(ShowingTheCheckListEvent());
+          context.read<CheckListBloc>().add(ShowingTheCheckListEvent(this.context));
         }
         if (state is DeleteTaskSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -52,7 +53,7 @@ class _HomePageState extends State<HomePage> {
               content: Text(state.message),
             ),
           );
-          context.read<CheckListBloc>().add(ShowingTheCheckListEvent());
+          context.read<CheckListBloc>().add(ShowingTheCheckListEvent(this.context));
         }
         if (state is CheckError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -63,7 +64,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           );
-          context.read<CheckListBloc>().add(ShowingTheCheckListEvent());
+          context.read<CheckListBloc>().add(ShowingTheCheckListEvent(this.context));
         }
       }, builder: (context, state) {
         if (state is LoadingState) {
@@ -75,12 +76,13 @@ class _HomePageState extends State<HomePage> {
           List<CheckList> allCheckList = state.theCheckList;
           List<CheckList> sortedCheckList =
               (sortTypeInitial.compareTo('alphabetic') == 0)
-                  ? MyToDoListService()
+                  ? context.read<MyToDoListService>()
                       .sortTaskByDesignation(allCheckList, sortType)
-                  : MyToDoListService()
-                      .sortTaskByDate(allCheckList, sortType);
-          if(searchWord!=null && searchWord!.isNotEmpty){
-            sortedCheckList = sortedCheckList.where((element) => element.designation.contains(searchWord!)).toList();
+                  : context.read<MyToDoListService>().sortTaskByDate(allCheckList, sortType);
+          if (searchWord != null && searchWord!.isNotEmpty) {
+            sortedCheckList = sortedCheckList
+                .where((element) => element.designation.contains(searchWord!))
+                .toList();
           }
           return (sortedCheckList.isNotEmpty)
               ? SingleChildScrollView(
@@ -92,12 +94,10 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Expanded(
                                 child: TextFormField(
-                                  controller: searchWordController,
-                              onChanged: (value){
+                              controller: searchWordController,
+                              onChanged: (value) {
                                 searchWord = searchWordController.text;
-                                setState(() {
-
-                                });
+                                setState(() {});
                               },
                             )),
                             PopupMenuButton(
@@ -107,11 +107,17 @@ class _HomePageState extends State<HomePage> {
                                   PopupMenuItem(
                                     child: Row(
                                       children: [
-                                        if(sortTypeInitial=='alphabetic')...[if (sortType == SortType.asc)
-                                          const Icon(Icons.arrow_upward_rounded)
-                                        else
-                                          const Icon(Icons.arrow_downward_rounded),],
-                                        const Expanded(child: Text('Sort by designation')),
+                                        if (sortTypeInitial ==
+                                            'alphabetic') ...[
+                                          if (sortType == SortType.asc)
+                                            const Icon(
+                                                Icons.arrow_upward_rounded)
+                                          else
+                                            const Icon(
+                                                Icons.arrow_downward_rounded),
+                                        ],
+                                        const Expanded(
+                                            child: Text('Sort by designation')),
                                       ],
                                     ),
                                     onTap: () {
@@ -128,11 +134,17 @@ class _HomePageState extends State<HomePage> {
                                   PopupMenuItem(
                                     child: Row(
                                       children: [
-                                        const Expanded(child: Text('Sort by date')),
-                                       if(sortTypeInitial!='alphabetic')...[ if (sortType == SortType.asc)
-                                          const Icon(Icons.arrow_upward_rounded)
-                                        else
-                                          const Icon(Icons.arrow_downward_rounded),]
+                                        const Expanded(
+                                            child: Text('Sort by date')),
+                                        if (sortTypeInitial !=
+                                            'alphabetic') ...[
+                                          if (sortType == SortType.asc)
+                                            const Icon(
+                                                Icons.arrow_upward_rounded)
+                                          else
+                                            const Icon(
+                                                Icons.arrow_downward_rounded),
+                                        ]
                                       ],
                                     ),
                                     onTap: () {
@@ -205,7 +217,7 @@ class _HomePageState extends State<HomePage> {
                                           this
                                               .context
                                               .read<CheckListBloc>()
-                                              .add(DeleteOneTaskEvent(
+                                              .add(DeleteOneTaskEvent(this.context,
                                                   sortedCheckList[index]));
                                         }
                                       },
@@ -274,7 +286,7 @@ class _HomePageState extends State<HomePage> {
                                                           .text;
                                                   context
                                                       .read<CheckListBloc>()
-                                                      .add(UpdateATodoEvent(
+                                                      .add(UpdateATodoEvent(this.context,
                                                           task));
                                                 }
                                               },
@@ -291,7 +303,7 @@ class _HomePageState extends State<HomePage> {
                                   onChanged: (value) {
                                     sortedCheckList[index].completed = value!;
                                     context.read<CheckListBloc>().add(
-                                        UpdateATodoEvent(
+                                        UpdateATodoEvent(this.context,
                                             sortedCheckList[index]));
                                   },
                                   value: sortedCheckList[index].completed,
@@ -352,7 +364,7 @@ class _HomePageState extends State<HomePage> {
                         if (designationController.text.isNotEmpty) {
                           context
                               .read<CheckListBloc>()
-                              .add(AddATaskEvent(designationController.text));
+                              .add(AddATaskEvent(this.context,designationController.text));
                         }
                       },
                     ),
@@ -369,6 +381,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _formatter = DateFormat('dd MMM yyyy', 'fr_Fr');
-    context.read<CheckListBloc>().add(ShowingTheCheckListEvent());
+    context.read<CheckListBloc>().add(ShowingTheCheckListEvent(this.context));
   }
 }
